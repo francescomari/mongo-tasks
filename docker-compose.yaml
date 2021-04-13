@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:4.4.5
+    expose:
+      - '27017'
+    logging:
+      driver: none
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DATABASE: db
+    expose:
+      - '8080'
+    depends_on:
+      - mongo
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DATABASE: db
+    depends_on:
+      - mongo
+    deploy:
+      replicas: 5
+  client:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.client
+    environment:
+      API_URL: http://api:8080
+    depends_on: 
+      - api
+    deploy:
+      replicas: 5
